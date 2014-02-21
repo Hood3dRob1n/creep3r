@@ -1,0 +1,14 @@
+/usr/local/apache2/logs/error_log
+/usr/local/apache2/logs/access_log
+/var/log/apache2/error.log
+/var/log/apache2/access.log
+/var/log/apache2/error_log
+/var/log/apache2/access_log
+/var/log/httpd/error_log
+/var/log/httpd/access_log
+/var/log/httpd-error.log
+/var/log/httpd-access.log
+/var/www/logs/error_log
+/var/www/logs/access_log
+/var/apache2/logs/error_log
+/var/apache2/logs/access_log

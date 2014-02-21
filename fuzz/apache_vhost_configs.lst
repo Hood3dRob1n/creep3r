@@ -1,0 +1,14 @@
+/usr/local/apache2/conf/000-default
+/usr/local/apache2/conf/extra/000-default
+/etc/apache2/sites-available/default
+/etc/apache2/sites-enabled/000-default
+/etc/apache2/vhosts.d/default_vhost.include
+/etc/apache2/vhosts.d/00_default_vhost.conf
+/etc/apache2/conf.d/security
+/etc/apache2/conf.d/000-default
+/etc/httpd/000-default
+/etc/httpd/conf.d/000-default
+/etc/httpd/conf.d/security
+/etc/httpd/conf.d/httpd-vhosts.conf
+/etc/httpd/extra/httpd-vhosts.conf
+/etc/httpd/extra/000-default

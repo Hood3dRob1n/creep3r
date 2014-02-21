@@ -1,0 +1,16 @@
+/etc/apache2/apache2.conf
+/etc/apache2/ports.conf
+/etc/apache2/httpd.conf
+/etc/apache2/httpd2.conf
+/etc/apache2/httpd.conf
+/etc/httpd/conf/httpd.conf
+/etc/httpd/httpd.conf
+/etc/init.d/apache/httpd.conf
+/etc/init.d/apache2/httpd.conf
+/opt/apache/conf/httpd.conf
+/usr/local/etc/apache22/httpd.conf
+/usr/local/etc/apache2/httpd.conf
+/usr/local/apache2/conf/httpd.conf
+/usr/local/apache/conf/httpd.conf
+/usr/pkg/etc/httpd/httpd.conf
+/var/www/conf/httpd.conf

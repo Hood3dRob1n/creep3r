@@ -1,0 +1,190 @@
+#!/usr/bin/env ruby
+#
+# creep3r
+# By: Hood3dRob1n
+#
+# Use bundler for installation
+# Use responsibly & enjoy!
+#
+# DOWNLOAD: http://uppit.com/gwsyprfk5kp0/creep3r.zip
+#           http://uppit.com/6m1lgmy9exx8/creep3r.rar
+# Installer Video: http://uppit.com/h0x1bstr8lgy/kali_installer.ogv
+# Demo of Dorker Tool: http://uppit.com/ze0zu8byytpm/creep3r-dork_demo.ogv
+# Quick Demo of various features: http://uppit.com/5ezb7xqrmn2g/basic_creep3r_demo.ogv
+#
+
+###### STD GEMS ######
+require 'base64'     #
+require 'cgi'        #
+require 'csv'        #
+require 'fileutils'  #
+require 'digest/md5' #
+require 'digest/sha1'#
+require 'net/ftp'    #
+require 'openssl'    #
+require 'optparse'   #
+require 'pp'         # 
+require 'resolv'     #
+require 'webrick'    #
+require 'yaml'       #
+#### NON-STD GEMS #### 
+require 'rubygems'   #
+require 'anemone'    #
+require 'archive/zip'#
+require 'bcrypt'     #
+require 'curb'       #
+require 'hpricot'    #
+require 'json'       #
+require 'net/ssh'    #
+require 'nokogiri'   #
+require 'mechanize'  ##
+require 'mysql'      # #
+#require 'pg'         ## #
+#require 'snmp'       ### #
+require 'text-table' ##### #_
+#require 'tiny_tds'   ########
+require 'ruby-progressbar' ##
+#############################
+
+# Set home & pull in our class files
+HOME = File.expand_path(File.dirname(__FILE__)) << '/'
+RESULTS = File.expand_path(File.dirname(__FILE__)) << '/results/'
+
+# Grab all of our cool code for the magic show
+Dir.glob("#{HOME}classes/*.rb").each do |code|
+  require "#{code}"
+end
+
+# 3rd party generates LM:NTLM hashes in ruby
+# https://github.com/krissi/ruby-smbhash.git
+# Bundler doesnt like their site setup so it
+# should have been included with source package...
+#########################################################
+require "#{HOME}classes/ruby-smbhash/lib/samba/encrypt" #
+#########################################################
+
+# Trap Interupts, close clean
+trap("SIGINT") {
+  puts "\n\nWARNING".light_red + "!".white + " CTRL".light_red + "+".white + "C Detected, Shutting things down".light_red + ".....\n\n".white
+  exit
+}
+
+# Clear
+def cls
+  system('clear')
+end
+
+# 0x1337 Banner
+def banner
+  puts '
+                                                                       
+   _|_|_|                                          _|_|_|              
+ _|        _|  _|_|    _|_|      _|_|    _|_|_|          _|  _|  _|_|  
+ _|        _|_|      _|_|_|_|  _|_|_|_|  _|    _|    _|_|    _|_|      
+ _|        _|        _|        _|        _|    _|        _|  _|        
+   _|_|_|  _|          _|_|_|    _|_|_|  _|_|_|    _|_|_|    _|        
+                                         _|                            
+                                         _|                            '.light_red
+end
+
+#PARSE RUNTIME ARGUMENTS
+options = {}
+optparse = OptionParser.new do |opts|
+  opts.program_name = "Creep3r"
+  opts.version = "1.0.0"
+  opts.release = "Beta"
+  opts.banner = "Usage:".light_green + "#{$0} ".white + "[".light_green + "OPTIONS".white + "]".light_green
+  opts.separator ""
+  opts.separator "EX:".light_green + " #{$0} --help".white
+  opts.separator "EX:".light_green + " #{$0} --config ./custom.yaml".white
+  opts.separator ""
+  opts.on('-c', '--config FILE', "\n\tConfiguration File to use".white) do |config_file|
+    if File.exists?(config_file.strip.chomp)
+      options[:config_file] = config_file.strip.chomp
+    else
+      banner
+      puts
+      print_error("Unable to load Custom Configuration File!")
+      print_error("Check path or permissions and try again...\n\n")
+      exit
+    end
+  end
+  opts.on('-h', '--help', "\n\tHelp Menu".white) do |blah|
+    banner
+    puts opts
+    puts
+    exit
+  end
+end
+if options[:config_file].nil?
+  if File.exists?(HOME + 'config/config.yaml')
+    print_status("Using default configuration file...")
+    options[:config_file] = HOME + 'config/config.yaml'
+  else
+    banner
+    puts
+    print_error("Unable to load Custom Configuration File!")
+    print_error("Check path or permissions and try again...\n\n")
+    exit
+  end
+end
+begin
+  foo = ARGV[0] || ARGV[0] = "-c #{HOME}/config/config.yaml" # if nothing passed, send to help menu
+  optparse.parse!
+  mandatory = [ :config_file ]
+  missing = mandatory.select{ |param| options[param].nil? } #freakout if they dont give us what we need!
+  if not missing.empty?
+    puts "Missing option(s)".light_red + ": #{missing.join(', ')}".white
+    puts
+    banner
+    puts optparse
+    puts
+    puts
+    exit
+  end
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument, OptionParser::AmbiguousOption
+  cls
+  puts $!.to_s.light_red
+  puts
+  banner
+  puts optparse
+  puts
+  puts
+  exit 666;
+end
+Dir.mkdir(RESULTS) unless File.exists?(RESULTS) and File.directory?(RESULTS)
+# Load Configuration from file & set some defaults
+$config = YAML.load_file(options[:config_file])
+$config['FCKEDITOR'] = { 'FOUND' => false }
+$config['HTTP']['HTTP_HEAD'] = false
+$config['HTTP']['PROGRESS'] = false
+if not $config['HTTP']['PROXY']
+  $config['HTTP']['PROXY_IP']=nil
+  $config['HTTP']['PROXY_POST']=nil
+end
+if $config['HTTP']['HTTP_USER_AGENT'] == 'Random'
+  $config['HTTP']['HTTP_USER_AGENT'] = user_agent_str
+end
+$config['INJECTOR'] = { 
+  'MYSQL' => { 
+    'METHODS' => [ 'UNION', 'BLIND', 'ERROR', 'TIME' ], 
+    'METHOD' => nil, 'URL' => nil, 'DATA' => nil,
+    'LOC' => nil,
+    'REF' => nil, 
+    'UA' => $config['HTTP']['HTTP_USER_AGENT'],
+    'HEADERS' => {}, 'COOKIES' => {}, 'CONFIGURED' => false,
+    'UNION' => {}, 'BLIND' => {}, 'ERROR' => {}, 'TIME' => {} },
+  'MSSQL'    => { 'METHODS' => [] },
+  'MSACCESS' => { 'METHODS' => [] },
+  'PGSQL'    => { 'METHODS' => [] },
+  'ORACLE'   => { 'METHODS' => [] }}
+
+if $config['CRAWLER']['MONGO_SUPPORT']
+  require 'mongo'
+end
+
+cls
+banner
+main_menu
+puts "\n\n"
+# EOF

@@ -1,0 +1,44 @@
+---
+HTTP:
+  COOKIESUPPORT: false
+  COOKIEFILE: ./cookie_file.txt
+  REF: false
+  REFERER: http://google.com/?q=dumbdumb
+  HTTP_HEADERS_ADD: false
+  HTTP_HEADERS:
+    Foo: bar
+  HTTP_USER_AGENT: Random
+  HTTP_AUTH: false
+  HTTP_AUTH_USER: username
+  HTTP_AUTH_PASS: password
+  HTTP_TIMEOUT: 30
+  PROXY: false
+  PROXY_IP: 127.0.0.1
+  PROXY_PORT: 8080
+  PROXY_AUTH: false
+  PROXY_USER: username
+  PROXY_PASS: password
+  TOR_PROXY: false
+CRAWLER:
+  LINK_LIMIT: 0
+  DEPTH_LIMIT: 0
+  THREAD_COUNT: 4
+  OBEY_ROBOTS: false
+  ACCEPT_COOKIES: false
+  C_COOKIES: ./cookies.txt
+  DONT_CRAWL: !ruby/regexp /dontcrawl/
+  MONGO_SUPPORT: false
+  MONGO_HOST: 127.0.0.1
+  MONGO_PORT: 27017
+  MONGO_DB: crawler
+  MONGO_COLLECTION: crawler_info
+DORKER:
+  TESTS: 0
+ADMIN:
+  CUSTOM_ERROR:
+SHODAN:
+  APIKEY: qSWcO6uyP6g3Sk3gTc9jbos1QZA5b6Yu
+PASSWORDS:
+  JOHN: true
+  JOHN_BIN: /home/clue/fun/passwords/crackers/john-1.7.9-jumbo-7/run/john
+  PASS_DIR: /home/clue/fun/passwords/dict/common/

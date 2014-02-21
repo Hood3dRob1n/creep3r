@@ -1,0 +1,189 @@
+# MongoDB Installation Instructions:
+  => http://docs.mongodb.org/manual/installation/
+
+Just follow the instructions in web guide, fairly simply stuff...
+
+  Debian => http://docs.mongodb.org/manual/tutorial/install-mongodb-on-debian/
+      ^^ Follow above if you're using Kali
+  Ubuntu => http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/
+  Red Hat => http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/
+  Linux Source => http://docs.mongodb.org/manual/administration/install-on-linux/
+  OSX   => http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/
+
+
+
+# OK, Steps to Query MongoDB Before/After Crawler Sessions:
+# Guide by HR
+
+# If you are on Debian/Ubuntu you can use the installer script 'mongodb_setup.sh' I slapped together
+# It will get MongoDB installed on local server and ready for craweler
+# This file aims to make you familiar enough with MongoDB interaction via Ruby to work with results as you like
+# Think custom parsers, additional analysis, etc...
+
+# Start MongoDB
+sudo service mongodb start
+
+# Stop MongoDB
+sudo service mongodb stop
+
+# Restart MongoDB
+sudo service mongodb restart
+
+
+# Login to IRB in separate terminal so you can query the MongoDB database instance(s) before, during and/or after crawling:
+  irb
+
+  # Load mongo driver
+  require 'mongo'
+
+  # Connect to local MongoDB instance
+  mongo = Mongo::MongoClient.new("localhost", 27017)
+
+  # List the available Mongo Databases or Schemas
+  mongo.database_names
+
+  # Before Crawl => ["local", "test"]
+  # After Crawl  => ["local", "anemone", "makeshift", "test"]
+  #   anemone = default crawler results (NO extras, has body)
+  # makeshift = custom crawler results  (Extras, NO body)
+
+  # Connect to a database for querying
+  mongodb = mongo.db('makeshift')
+
+  # Check DB Profiling level
+  puts "Profiling Level: #{mongodb.profiling_level}"
+
+  # List currently active/connected database name
+  mongodb.name
+
+  # List available collections in database
+  mongodb.collection_names
+  # Anemone Defaults   => ["system.indexes", "pages"]
+  # Makeshift Defaults => ["system.indexes", "crawler_info"]
+
+  # Set collection variable
+  coll = mongodb['crawler_info']
+
+  # Determine how large a collection is (i.e. how many entries it has)
+  mongodb['crawler_info'].size
+  mongodb['crawler_info'].count
+  OR 
+  coll.count
+  coll.size
+
+  # List the first entry in the collection
+  # Response is a hash with all results stored
+  mongodb['crawler_info'].find_one
+  OR
+  coll.find_one
+  # Example First Entry in Makeshift database, crawler_info collection => {"_id"=>BSON::ObjectId('52c245423dc39f5b14000001'), "url"=>"http://site.com/", "depth"=>"0", "code"=>"200", "time"=>"485", "size"=>26752, "content-length"=>"26752", "redirect_to"=>"N/A", "key_headers"=>{"Server"=>"Apache"}, "cookies"=>["PHPSESSID=d398f893fbe3fd09ca8982411ed79291; path=/"], "title"=>"N/A", "description"=>"N/A", "keywords"=>"N/A", "generator"=>"N/A", "language"=>"N/A", "author"=>"N/A", "copyright"=>"None", "forms"=>4, "scripts"=>7, "iframes"=>0, "phpbb"=>"N/A", "vulnerable"=>"N/A", "emails"=>[]}
+
+  # Using the default makeshift results db
+  # Iterate through the specific details/findings for a single link or stored result
+  mongodb['crawler_info'].find_one.each do |k, v|
+    print "#{k}: "
+    if v.respond_to?('each')
+      print "\n"
+      if v.kind_of?(Hash)
+        v.each do |a, b|
+          puts "   #{a}: #{b}"
+        end
+      else
+        v.each do |something|
+          puts "   #{something.to_s.chomp}"
+        end
+      end
+    else
+      print "#{v}\n"
+    end
+  end
+
+  # Iterate through all entries in collection
+  # Row by row, Display all fields reported on...
+  mongodb['crawler_info'].find.each do |row|
+    row.each do |k, v|
+      print "#{k.chomp}: "
+      if v.respond_to?('each')
+        print "\n"
+        if v.kind_of?(Hash)
+          v.each do |a, b|
+            puts "   #{a}: #{b}".chomp
+          end
+        else
+          v.each do |something|
+            puts "   #{something.to_s.chomp}"
+          end
+        end
+      else
+        print "#{v}\n"
+      end
+    end
+    puts "\n\n"
+  end
+
+  # Process in chunks of 10 rows at a time
+  coll.find.each_slice(10) do |slice|
+    puts slice.inspect
+  end
+
+  OR
+
+  mongodb['crawler_info'].find.each_slice(10) do |slice|
+    puts slice.inspect
+  end
+
+  # Find how many links fetched had a response code of 200
+  coll.find("code" => '200').to_a.size
+  OR
+  mongodb['crawler_info'].find("code" => '200').to_a.size
+
+  # Find only broken links which had a response code of 404
+  # Results placed in array which can be enumerated using methods already shown above
+  coll.find("code" => '404').to_a
+  OR
+  mongodb['crawler_info'].find("code" => '404').to_a
+  # Example Result => [{"_id"=>BSON::ObjectId('52c245503dc39f5b14000055'), "url"=>"http://site.com/placeholder.gif", "depth"=>"1", "code"=>"404", "time"=>"62", "size"=>11812, "content-length"=>"11812", "redirect_to"=>"N/A", "key_headers"=>{"Server"=>"Apache"}, "cookies"=>nil, "title"=>"N/A", "description"=>"N/A", "keywords"=>"N/A", "generator"=>"N/A", "language"=>"N/A", "author"=>"N/A", "copyright"=>"None", "forms"=>0, "scripts"=>3, "iframes"=>0, "phpbb"=>nil, "vulnerable"=>"N/A", "emails"=>[]}, {"_id"=>BSON::ObjectId('52c245523dc39f5b14000064'), "url"=>"http://site.com/Mango-404-52.html", "depth"=>"2", "code"=>"404", "time"=>"194", "size"=>11812, "content-length"=>"11812", "redirect_to"=>"N/A", "key_headers"=>{"Server"=>"Apache"}, "cookies"=>nil, "title"=>"N/A", "description"=>"N/A", "keywords"=>"N/A", "generator"=>"N/A", "language"=>"N/A", "author"=>"N/A", "copyright"=>"None", "forms"=>0, "scripts"=>3, "iframes"=>0, "phpbb"=>"N/A", "vulnerable"=>"N/A", "emails"=>[]}]
+
+  # Sort results based on crawler depth
+  coll.find("code" => '200').sort('depth').to_a
+  OR
+  mongodb['crawler_info'].find("code" => '200').sort('depth').to_a
+
+  # Sort results findings by crawler depth or other field values
+  # Limit results to those with response code of 200 where depth = 1
+  mongodb['crawler_info'].find("code" => '200', "depth" => '1').to_a.size
+  # Example Result => 88
+  # Verse all with response code 200
+  # mongodb['crawler_info'].find("code" => '200').to_a.size
+  # Example Result => 953
+
+
+  # Get range of results based on a range of values
+  # Get results where response code 200 and depth > 0 but <= 2
+  mongodb['crawler_info'].find("code" => '200', "depth" => {"$gt" => '0', "$lte" => '2'}).to_a.size
+  # Found with Crawl Depth 2 => 952
+  mdb['crawler_info'].find("code" => '200', "depth" => {"$gt" => '1', "$lte" => '2'}).to_a.size
+  # Found from Crawl Depth 1 to Crawl Depth 2 => 864
+  mongodb['crawler_info'].find("code" => '200', "depth" => {"$gt" => '0', "$lte" => '1'}).to_a.size
+  # Found with Crawl Depth 1 => 88
+  mongodb['crawler_info'].find("code" => '200', "depth" => {"$lte" => '0'}).to_a.size
+  # Base Crawl => 1
+
+  # Search DB based on field name and regex pattern
+  mongodb['crawler_info'].find({"url" => /placeholder/}).to_a
+  # Example Result => [{"_id"=>BSON::ObjectId('52c245503dc39f5b14000055'), "url"=>"http://site.com/placeholder.gif", "depth"=>"1", "code"=>"404", "time"=>"62", "size"=>11812, "content-length"=>"11812", "redirect_to"=>"N/A", "key_headers"=>{"Server"=>"Apache"}, "cookies"=>nil, "title"=>"N/A", "description"=>"N/A", "keywords"=>"N/A", "generator"=>"N/A", "language"=>"N/A", "author"=>"N/A", "copyright"=>"None", "forms"=>0, "scripts"=>3, "iframes"=>0, "phpbb"=>nil, "vulnerable"=>"N/A", "emails"=>[]}]
+
+
+  # Delete all entries in collection under database
+  mongodb['crawler_info'].remove
+  OR
+  coll.remove
+
+  # Drop/Delete Collection Entirely
+  coll.drop
+  OR 
+  mongodb['crawler_info'].drop
+
+  # Drop/Delete Database Entirely
+  mongo.drop_database("makeshift")
+

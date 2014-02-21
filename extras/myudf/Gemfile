@@ -1,0 +1,12 @@
+# Gemfile for ColdFusion Killer v2
+# Grab Sources from the default RubyGems depot
+source 'https://rubygems.org'
+
+# Adds a little color with ease
+gem 'colorize'
+
+# MySQL Gem for Connection handling and all the magic :p
+gem 'mysql'
+
+# Readline for Pseudo Shell
+gem 'rb-readline'
