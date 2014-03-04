@@ -461,7 +461,7 @@ class Coldfusion
           hash = OpenSSL::HMAC.hexdigest('sha1', @salt, @password)
           uri=URI(site)
 
-          if not dbpasses.empty?
+          if not dbpasses.nil? and dbpasses.size > 0
             neo = "#{RESULTS}#{uri.host}/neo-datasource.xml"
           else
             Dir.mkdir("#{RESULTS}#{uri.host}") unless File.exists?("#{RESULTS}#{uri.host}") and File.directory?("#{RESULTS}#{uri.host}")

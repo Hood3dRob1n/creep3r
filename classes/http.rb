@@ -145,6 +145,11 @@ end
 class EasyCurb
   # Curl::Multi Request Option
   # Returns a Hash { 'url link' => [single curb response array] }
+#        url                                     # URL
+#        mresponses[url].body_str                # Response Body
+#        mresponses[url].response_code           # Response Code
+#        mresponses[url].header_str              # Response Header String
+#        mresponses[url].total_time.to_s[0..5]   # Response Time
   def multi_get(arrayoflinks)
     mresponses = {}
     m = Curl::Multi.new
@@ -171,6 +176,8 @@ class EasyCurb
     rescue Curl::Err::GotNothingError => e
       print_error("Curl Failure => #{e}")
     rescue Curl::Err::RecvError => e
+      print_error("Curl Failure => #{e}")
+    rescue Curl::Err::TimeoutError => e
       print_error("Curl Failure => #{e}")
     rescue Curl::Err::HostResolutionError => e
       print_error("Problem resolving Host Details => #{e}")
@@ -203,7 +210,7 @@ class EasyCurb
 
       # If using progressbar, increment ETA aftter each success
       if $config['HTTP']['PROGRESS']
-        curl.on_success { |easy| @progressbar.increment }
+        curl.on_complete { |easy| @progressbar.increment }
       end
 
       # Set HTTP Authentication Details if needed
@@ -230,6 +237,9 @@ class EasyCurb
         curl.cookies = $config['HTTP']['COOKIEFILE']
       end
 
+      # Set Request Timeout so we dont wait forever
+      curl.timeout = $config['HTTP']['TIMEOUT']
+
       # Set User-Agent to default or whatever was selected
       curl.useragent = $config['HTTP']['HTTP_USER_AGENT']
 
@@ -250,6 +260,8 @@ class EasyCurb
       rescue Curl::Err::RecvError => e
         print_error("Curl Failure => #{e}")
       rescue Curl::Err::GotNothingError => e
+        print_error("Curl Failure => #{e}")
+      rescue Curl::Err::TimeoutError => e
         print_error("Curl Failure => #{e}")
       rescue Curl::Err::HostResolutionError => e
         print_error("Problem resolving Host Details => #{e}")
@@ -273,6 +285,8 @@ class EasyCurb
     rescue Curl::Err::RecvError => e
       print_error("Curl Failure => #{e}")
     rescue Curl::Err::GotNothingError => e
+      print_error("Curl Failure => #{e}")
+    rescue Curl::Err::TimeoutError => e
       print_error("Curl Failure => #{e}")
     rescue Curl::Err::HostResolutionError => e
       print_error("Problem resolving Host Details => #{e}")
@@ -306,6 +320,8 @@ class EasyCurb
     rescue Curl::Err::RecvError => e
       print_error("Curl Failure => #{e}")
     rescue Curl::Err::GotNothingError => e
+      print_error("Curl Failure => #{e}")
+    rescue Curl::Err::TimeoutError => e
       print_error("Curl Failure => #{e}")
     rescue Curl::Err::HostResolutionError => e
       print_error("Problem resolving Host Details => #{e}")

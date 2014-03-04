@@ -28,6 +28,9 @@ gem 'net-ssh'
 # MySQL Connection Handler
 gem 'mysql'
 
+# SQL Server Connection Handler (DBI ODBC doesnt work for me, idk....)
+gem 'tiny_tds' 
+
 # We need to get Bcrypt Gem for Hashing Function
 gem 'bcrypt-ruby'
 
@@ -36,3 +39,12 @@ gem 'json'
 
 # Pure Ruby Zip Implementation, used for Zip Cracking
 gem 'archive-zip'
+
+# Postgres Connection Handler
+gem 'pg'
+
+# SNMP Connection Handler and MIB References
+gem 'snmp'
+
+# Wordpress XML-RPC API Compliant Libs
+gem 'rubypress'

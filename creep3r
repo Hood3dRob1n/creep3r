@@ -3,7 +3,7 @@
 # creep3r
 # By: Hood3dRob1n
 #
-# Use bundler for installation
+# Use installer files + bundler for installation
 # Use responsibly & enjoy!
 #
 # DOWNLOAD: http://uppit.com/gwsyprfk5kp0/creep3r.zip
@@ -21,6 +21,7 @@ require 'fileutils'  #
 require 'digest/md5' #
 require 'digest/sha1'#
 require 'net/ftp'    #
+require 'net/telnet' #
 require 'openssl'    #
 require 'optparse'   #
 require 'pp'         # 
@@ -37,12 +38,13 @@ require 'hpricot'    #
 require 'json'       #
 require 'net/ssh'    #
 require 'nokogiri'   #
-require 'mechanize'  ##
-require 'mysql'      # #
-#require 'pg'         ## #
-#require 'snmp'       ### #
-require 'text-table' ##### #_
-#require 'tiny_tds'   ########
+require 'mechanize'  #
+require 'mysql'      #
+require 'pg'         #
+require 'rubypress'  #
+require 'snmp'       #
+require 'text-table' #
+require 'tiny_tds'   ########
 require 'ruby-progressbar' ##
 #############################
 

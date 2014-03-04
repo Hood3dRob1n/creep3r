@@ -181,7 +181,7 @@ class Crawler
 
           # Add any available iframe SRC Links
           if not page.doc.nil? and not page.doc.search("//iframe[@src]").nil?
-            page.doc.search("//img[@src]").each do |a|
+            page.doc.search("//iframe[@src]").each do |a|
               u = a['src']
               next if u.nil? or u.empty?
               if not u =~ /^http/

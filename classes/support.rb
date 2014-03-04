@@ -57,6 +57,7 @@ def fireNforget(command)
   else
     Process.detach(pid)
   end
+  return pid
 end
 
 # Pass it a directory traversal (or any string) and it will build out
@@ -622,35 +623,35 @@ def quick_regex_check(link, body, site=false)
     print_good("Possible PHPINFO() File found!")
     f=File.open(vdir + 'phpinfo.links', 'a+')
     f.puts link
-    if agent.page.body =~ /<tr><td class="e">Apache Version <\/td><td class="v">(.+)<\/td><\/tr>/
+    if body =~ /<tr><td class="e">Apache Version <\/td><td class="v">(.+)<\/td><\/tr>/
       puts "\tApache Version".light_green + ": #{$1.chomp}".white
       f.puts "\tApache Version: #{$1.chomp}"
     end
-    if agent.page.body =~ /<h1 class="p">(PHP Version .+)<\/h1>/
+    if body =~ /<h1 class="p">(PHP Version .+)<\/h1>/
       puts "\tPHP Version".light_green + ": #{$1.chomp}".white
       f.puts "\tPHP Version: #{$1.chomp}"
     end
-    if agent.page.body =~ /<tr><td class="e">System <\/td><td class="v">(.+)<\/td><\/tr>/
+    if body =~ /<tr><td class="e">System <\/td><td class="v">(.+)<\/td><\/tr>/
       puts "\tSystem".light_green + ": #{$1.chomp}".white
       f.puts "\tSystem: #{$1.chomp}"
     end
-    if agent.page.body =~ /<tr><td class="e">DOCUMENT_ROOT <\/td><td class="v">(.+)<\/td><\/tr>/
+    if body =~ /<tr><td class="e">DOCUMENT_ROOT <\/td><td class="v">(.+)<\/td><\/tr>/
       puts "\tDocument Root".light_green + ": #{$1.chomp}".white
       f.puts "\tDocument Root: #{$1.chomp}"
     end
-    if agent.page.body =~ /<tr><td class="e">allow_url_fopen<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
+    if body =~ /<tr><td class="e">allow_url_fopen<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
       puts "\tallow_url_fopen".light_green + ": #{$1.chomp}".white
       f.puts "\tallow_url_fopen: #{$1.chomp}"
     end
-    if agent.page.body =~ /<tr><td class="e">magic_quotes_gpc<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
+    if body =~ /<tr><td class="e">magic_quotes_gpc<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
       puts "\tmagic_quotes_gpc".light_green + ": #{$1.chomp}".white
       f.puts "\tmagic_quotes_gpc: #{$1.chomp}"
     end
-    if agent.page.body =~ /<tr><td class="e">safe_mode<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
+    if body =~ /<tr><td class="e">safe_mode<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
       puts "\tsafe_mode".light_green + ": #{$1.chomp}".white
       f.puts "\tsafe_mode: #{$1.chomp}"
     end
-    if agent.page.body =~ /<tr><td class="e">session.save_path<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
+    if body =~ /<tr><td class="e">session.save_path<\/td><td class="v">(.+)<\/td><td class="v">.+<\/td><\/tr>/
       puts "\tsession.save_path".light_green + ": #{$1.chomp}".white
       f.puts "\tsession.save_path: #{$1.chomp}"
     end

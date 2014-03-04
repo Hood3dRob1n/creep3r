@@ -249,7 +249,7 @@ class DNSEnum
     if dig.nil?
       puts "       [".light_red + "X".white + "] ".light_red + "No Zone Transfers w/out Dig!".white
     else
-      res = commandz("#{dig[0].to_s.chomp} @#{nssrv} #{target} axfr")
+      res = commandz("#{dig[0].to_s.chomp} @#{nssrv} #{target} axfr 2> /dev/null")
       if res[-1] =~ /Transfer failed/i
         puts "       [".light_red + "-".white + "] ".light_red + "Zone Transfer Failed!".white
       else

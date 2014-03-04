@@ -35,6 +35,7 @@ addthis-follow
 addthis-smart-layers
 addthis-social-sign-in
 addthis-welcome
+admin_renamer_extended
 admin-color-schemes
 admin-customizer
 admin-management-xtended
@@ -92,6 +93,7 @@ all-in-one-seo-pack
 all-in-one-seo-pack-importer
 all-in-one-video-pack
 all-in-one-webmaster
+all-in-one-wp-security
 all-in-one-wp-security-and-firewall
 all-video-gallery
 alligator-popup
@@ -540,6 +542,7 @@ embedly
 embedplus-for-wordpress
 enable-media-replace
 encyclopedia
+enforce-strong-password
 enhanced-admin-bar-with-codex-search
 enhanced-text-widget
 enhanced-tooltipglossary
@@ -1912,6 +1915,7 @@ wp-example-content
 wp-exec-php
 wp-external-links
 wp-facebook-open-graph-protocol
+wp-fail2ban
 wp-fast-cache
 wp-fastest-cache
 wp-favorite-posts

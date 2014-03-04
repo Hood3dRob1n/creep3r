@@ -12,6 +12,9 @@ def main_menu_help
   puts "dbtools".light_yellow + "   => ".white + "Database Tools".light_red
   puts "special".light_yellow + "   => ".white + "Specialty Tools".light_red
   puts "passwords".light_yellow + " => ".white + "Password Tools".light_red
+  puts "login".light_yellow + "     => ".white + "Service Login Tools".light_red
+  puts "listener".light_yellow + "  => ".white + "Listners & Connectors".light_red
+  puts "payloads".light_yellow + "  => ".white + "Simple Payload Tools".light_red
   puts "strass".light_yellow + "    => ".white + "String Assistant Tool".light_red
   puts "local".light_yellow + "     => ".white + "Local OS Shell".light_red
   puts "console".light_yellow + "   => ".white + "Interactive Ruby Console".light_red
@@ -122,6 +125,15 @@ def main_menu
       cmd=$1.strip.chomp
       res = commandz(cmd)
       print_line("\n#{res.join().chomp}")
+      main_menu
+    when /^login|^service.brute|^bruter$/i
+      login_tools_menu
+      main_menu
+    when /^listen|^connect$/i
+      listener_menu
+      main_menu
+    when /^payload/i
+
       main_menu
     else
       puts

