@@ -4,8 +4,7 @@ def search_menu_help
   puts "back".light_yellow + "   => ".white + "Return to Main Menu".light_red
   puts "ask".light_yellow + "    => ".white + "Search w/Ask".light_red
   puts "bing".light_yellow + "   => ".white + "Search w/Bing!".light_red
-  puts "excite".light_yellow + " => ".white + "Search w/Excite".light_red
-  puts "hotbot".light_yellow + " => ".white + "Search w/HotBot".light_red
+  puts "google".light_yellow + " => ".white + "Search w/Google".light_red
   puts "yahoo".light_yellow + "  => ".white + "Search w/Yahoo!".light_red
   puts "all".light_yellow + "    => ".white + "Search w/All Search Engines".light_red
   puts "list".light_yellow + "   => ".white + "Load Links from File".light_red
@@ -64,7 +63,7 @@ def search_menu
         print_error("Check path or permissions and try again....\n")
       end
       search_menu
-    when /^ask$|^bing$|^excite$|^hotbot$|^yahoo$|^all$/i
+    when /^ask$|^bing$|^yahoo$|^google|^all$/i
       print_status("Need some info for search....")
       squery = Readline.readline("   Enter Search Term: ", true)
       eanswer = Readline.readline("   Enable TLD Expansion Search (Y/N)? ", true)
@@ -113,6 +112,18 @@ def search_menu
         else
           links += search.bing_search(squery.strip.chomp)
         end
+      when /google/i
+        if tld_expansion
+          tld_expansion_array.each do |t|
+            count=links.size
+            print_status("Searching with Dork against #{t}....")
+            dork = squery.strip.chomp + "%20site%3A#{t}"
+            links += search.google_search(dork, false)
+            print_status("Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
+          end
+        else
+          links += search.google_search(squery.strip.chomp)
+        end
       when /excite/i
         if tld_expansion
           tld_expansion_array.each do |t|
@@ -156,25 +167,21 @@ def search_menu
             print_status("Searching with Dork against #{t}....")
             dork = squery.strip.chomp + "%20site%3A#{t}"
             links += search.ask_search(dork, false)
-            print_status("Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
+            print_status("Ask Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
             count=links.size
             links += search.bing_search(dork, false)
-            print_status("Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
+            print_status("Bing Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
             count=links.size
-            links += search.excite_search(dork, false)
-            print_status("Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
-            count=links.size
-            links += search.hotbot_search(dork, false)
-            print_status("Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
+            links += search.google_search(dork, false)
+            print_status("Google Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
             count=links.size
             links += search.yahoo_search(dork, false)
-            print_status("Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
+            print_status("Yahoo Found #{links.size - count.to_i} Links....") unless (links.size - count.to_i) == 0
           end
         else
           links += search.ask_search(squery.strip.chomp)
           links += search.bing_search(squery.strip.chomp)
-          links += search.excite_search(squery.strip.chomp)
-          links += search.hotbot_search(squery.strip.chomp)
+          links += search.google_search(squery.strip.chomp)
           links += search.yahoo_search(squery.strip.chomp)
         end
       end

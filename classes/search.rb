@@ -8,6 +8,11 @@ class SearchEngine
     @@out = RESULTS + 'search/'
     @http=EasyCurb.new
     Dir.mkdir(@@out) unless File.exists?(@@out) and File.directory?(@@out)
+
+    # Regex Filter gets used to filter out shit sites in results
+    # Also good for adding sites you know you dont want to mess with...
+    # Add to it as you like....
+    @bad_regex = /^$|^\s+$|^\#$|^\#\s+$|google\.com|^\/.+|^javascript|webcache\.googleusercontent\.com|youtube\.com|blogger\.com|excite\.com|infospace\.com|baidu\.com|duckduckgo\.com|google\.com|ask\.com|msn\.com|microsoft\.com|bing\.com|yahoo\.com|live\.com|microsofttranslator\.com|irongeek\.com|tefneth-import\.com|hackforums\.net|freelancer\.com|facebook\.com|mozilla\.org|stackoverflow\.com|php\.net|wikipedia\.org|amazon\.com|4shared\.com|wordpress\.org|about\.com|lycos\.com|lycosasset\.com|zeeblio\.com|weatherzombie\.com|gamesville\.com|soundcloud\.com|phpbuilder\.com|phpnuke\.org|fbi\.gov|nasa\.gov|dhs\.gov|linearcity\.hk|youtube\.com|ptjaviergroup\.com|p4kurd\.com|tizag\.com|discoverbing\.com|devshed\.com|ashiyane\.org|owasp\.org|1923turk\.com|fictionbook\.org|silenthacker\.do\.am|v4-team\.com|codingforums\.com|tudosobrehacker\.com|zymic\.com|forums\.whirlpool\.net\.au|gaza-hacker\.com|immortaltechnique\.co\.uk|w3schools\.com|phpeasystep\.com|mcafee\.com|specialinterestarms\.com|pastesite\.com|pastebin\.com|joomla\.org|joomla\.fr|sourceforge\.net|joesjewelry\.com|twitter\.com|pluslog\.com/
   end
 
   # Ask.com! Search Function
@@ -41,7 +46,7 @@ class SearchEngine
     end
     usablelinks = usablelinks.uniq
     usablelinks.each do |url|
-      goodlinks << url unless url =~ /google\.com|ask\.com|msn\.com|microsoft\.com|bing\.com|yahoo\.com|live\.com|microsofttranslator\.com|irongeek\.com|tefneth-import\.com|hackforums\.net|freelancer\.com|facebook\.com|mozilla\.org|stackoverflow\.com|php\.net|wikipedia\.org|amazon\.com|4shared\.com|wordpress\.org|about\.com|phpbuilder\.com|phpnuke\.org|fbi\.gov|nasa\.gov|dhs\.gov|linearcity\.hk|youtube\.com|ptjaviergroup\.com|p4kurd\.com|tizag\.com|discoverbing\.com|devshed\.com|ashiyane\.org|owasp\.org|1923turk\.com|fictionbook\.org|silenthacker\.do\.am|v4-team\.com|codingforums\.com|tudosobrehacker\.com|zymic\.com|forums\.whirlpool\.net\.au|gaza-hacker\.com|lycos\.com|lycosasset\.com|zeeblio\.com|weatherzombie\.com|gamesville\.com|soundcloud\.com|immortaltechnique\.co\.uk|w3schools\.com|phpeasystep\.com|mcafee\.com|specialinterestarms\.com|pastesite\.com|pastebin\.com|joomla\.org|joomla\.fr|sourceforge\.net|joesjewelry\.com|twitter\.com/i
+      goodlinks << url unless url =~ @bad_regex
     end
     puts "   [".light_green + "+".white + "] ".light_green + "Unique Links: #{goodlinks.length}".white if verbose
     f=File.open("#{@@out}ask.search", 'w+')
@@ -90,7 +95,7 @@ class SearchEngine
     end
     usablelinks = usablelinks.uniq
     usablelinks.each do |url|
-      goodlinks << url unless url =~ /baidu\.com|msn\.com|microsoft\.com|bing\.com|yahoo\.com|live\.com|microsofttranslator\.com|irongeek\.com|tefneth-import\.com|hackforums\.net|freelancer\.com|facebook\.com|mozilla\.org|stackoverflow\.com|php\.net|wikipedia\.org|amazon\.com|4shared\.com|wordpress\.org|about\.com|phpbuilder\.com|phpnuke\.org|fbi\.gov|nasa\.gov|dhs\.gov|linearcity\.hk|youtube\.com|ptjaviergroup\.com|p4kurd\.com|tizag\.com|discoverbing\.com|devshed\.com|ashiyane\.org|owasp\.org|1923turk\.com|fictionbook\.org|lycos\.com|lycosasset\.com|zeeblio\.com|weatherzombie\.com|gamesville\.com|soundcloud\.com|silenthacker\.do\.am|v4-team\.com|codingforums\.com|tudosobrehacker\.com|zymic\.com|forums\.whirlpool\.net\.au|gaza-hacker\.com|immortaltechnique\.co\.uk|w3schools\.com|phpeasystep\.com|mcafee\.com|specialinterestarms\.com|pastesite\.com|pastebin\.com|joomla\.org|joomla\.fr|sourceforge\.net|joesjewelry\.com|twitter\.com/i
+      goodlinks << url unless url =~ @bad_regex
     end
     puts "   [".light_green + "+".white + "] ".light_green + "Unique Links: #{goodlinks.length}".white if verbose
     f=File.open("#{@@out}bing.search", 'w+')
@@ -102,95 +107,62 @@ class SearchEngine
     return goodlinks
   end
 
-  # Excite Search Engine
-  # Supposedly uses Google, Yahoo & Yandex Combined Search Results
-  # Provides search query and we fetch link results
-  # Return the links for first 15 pages as an array
-  def excite_search(squery, verbose=true)
-    if verbose
-      $config['HTTP']['PROGRESS'] = true
-    end
-    searches=[]
-    goodlinks=[]
-    usablelinks=[]
-    # Build our array of page requests links
-    puts "[".light_blue + "*".white + "]".light_blue + " Searching via Excite....".white if verbose
-    (0 .. 14).each { |x| searches << "http://msxml.excite.com/search/web?qsi=#{x}1&q=#{squery.gsub(' ', '%20')}" }
-    # Curl's Multi::Mode for faster requests
-    mresponses = @http.multi_get(searches)
-    searches.each do |url|
-      page = Nokogiri::HTML(mresponses[url].body_str)
-      possibles = page.css("a")
-      possibles.select do |link|
-        if link['href'] =~ /^(http.+)&ru=.+/
-          u = URI.decode($1.to_s.sub('ccs.infospace.com/ClickHandler.ashx?du=', '').chomp)
-          usablelinks << u unless u =~ /excite\.com|infospace\.com/
-        end
-      end
-    end
-    usablelinks = usablelinks.uniq
-    usablelinks.each do |url|
-      goodlinks << url unless url =~ /excite\.com|infospace\.com|baidu\.com|duckduckgo\.com|google\.com|ask\.com|msn\.com|microsoft\.com|bing\.com|yahoo\.com|live\.com|microsofttranslator\.com|irongeek\.com|tefneth-import\.com|hackforums\.net|freelancer\.com|facebook\.com|mozilla\.org|stackoverflow\.com|php\.net|wikipedia\.org|amazon\.com|4shared\.com|wordpress\.org|about\.com|lycos\.com|lycosasset\.com|zeeblio\.com|weatherzombie\.com|gamesville\.com|soundcloud\.com|phpbuilder\.com|phpnuke\.org|fbi\.gov|nasa\.gov|dhs\.gov|linearcity\.hk|youtube\.com|ptjaviergroup\.com|p4kurd\.com|tizag\.com|discoverbing\.com|devshed\.com|ashiyane\.org|owasp\.org|1923turk\.com|fictionbook\.org|silenthacker\.do\.am|v4-team\.com|codingforums\.com|tudosobrehacker\.com|zymic\.com|forums\.whirlpool\.net\.au|gaza-hacker\.com|immortaltechnique\.co\.uk|w3schools\.com|phpeasystep\.com|mcafee\.com|specialinterestarms\.com|pastesite\.com|pastebin\.com|joomla\.org|joomla\.fr|sourceforge\.net|joesjewelry\.com|twitter\.com/i
-    end
-    puts "   [".light_green + "+".white + "] ".light_green + "Unique Links: #{goodlinks.length}".white if verbose
-    f=File.open("#{@@out}excite.search", 'w+')
-    goodlinks.each { |x| f.puts x }
-    f.close
-    if verbose
-      $config['HTTP']['PROGRESS'] = false
-    end
-    return goodlinks
-  end
-
-  # NO LONGER WORKING, HAVE TO RE-FIGURE OUT HOW TO PARSE THEIR NEW JS MAGIC......
   # Google Search Function
+  # We use headless browser to get results
+  # Neeeded since they use so much js obfuscation now :(
   # Provide search query and we fetch link results
   # Return the links for first 25 pages as an array of links
   def google_search(squery, verbose=true)
-    print_error("Google Search is temporarily out of order....")
-    print_error("Check back again soon....")
-  end
-
-  # HotBot Search Engine
-  # Provides search query and we fetch link results
-  # Return the links for first 15 pages as an array
-  def hotbot_search(squery, verbose=true)
-    if verbose
-      $config['HTTP']['PROGRESS'] = true
-    end
-    searches=[]
     goodlinks=[]
     usablelinks=[]
-    # Build our array of page requests links
-    puts "[".light_blue + "*".white + "]".light_blue + " Searching via HotBot....".white if verbose
-    (1 .. 15).each { |x| searches << "http://www.hotbot.com/search/web?pn=#{x}&q=#{squery.gsub(' ', '%20')}&keyvol=01a2a6a008fa20688487" }
-    # Curl's Multi::Mode for faster requests
-    mresponses = @http.multi_get(searches)
-    searches.each do |url|
-      page = Nokogiri::HTML(mresponses[url].body_str)
-      possibles = page.css("a")
-      possibles.select do |link|
-        begin
-	  url = URI.parse(link['href'])
-	  if url.scheme == 'http' || url.scheme =='https'
-	    usablelinks << link['href'] unless link['href'] =~ /lygo\.com/
-	  end
-	rescue URI::InvalidURIError => err 
-	  # If bad link cause error cause its not a link dont freak out, just move on....
-	end
+    puts "[".light_blue + "*".white + "]".light_blue + " Searching via Google....".white if verbose
+    agent = Mechanize.new
+    begin
+      agent.user_agent = $config['HTTP']['HTTP_USER_AGENT']
+      if $config['HTTP']['PROXY']
+        if $config['HTTP']['PROXY_AUTH']
+          agent.set_proxy($config['HTTP']['PROXY_IP'], $config['HTTP']['PROXY_PORT'].to_i, user=$config['HTTP']['PROXY_USER'], pass=$config['HTTP']['PROXY_PASS'])
+        else
+          agent.set_proxy($config['HTTP']['PROXY_IP'], $config['HTTP']['PROXY_PORT'].to_i)
+        end
+      end
+
+      page = agent.get('http://www.google.com/')          # Google main search page
+      search_form = page.form(page.forms.first.name)  # Grab the first & only form on page
+      search_form.q = squery.gsub(' ', '%20')           # Set our Search Query or Dork value
+      # Submit form and create new Page object
+      page = agent.submit(search_form, search_form.buttons.first)
+
+      page.links.each do |link|
+        # Filter out a bunch of noise & junk links with regex
+        usablelinks << link.href unless link.href.nil? or link.href =~ @bad_regex
+      end
+    rescue OpenSSL::SSL::SSLError,Errno::ETIMEDOUT,Net::HTTP::Persistent::Error,NoMethodError,Zlib::DataError,Mechanize::ResponseCodeError => e
+      print_error("Problem Getting Google Results!\n\t=>#{e}\n") if verbose
+    end
+
+    # Next we loop through additional pages to get more results
+    count=1
+    z=['|','\\','/','*','-']
+    (1..14).each do |x|
+      begin
+        page = agent.page.link_with(:text => "Next").click # We need find the "NEXT" link & click it!
+        page.links.each do |link|
+          print "\r   [".light_blue + "#{z[rand(z.size)]}".white + "] Scraping".light_blue + "...".white
+          usablelinks << link.href unless link.href.nil? or link.href =~ @bad_regex
+        end
+        count += 1
+        sleep(1)
+      rescue OpenSSL::SSL::SSLError,Errno::ETIMEDOUT,Net::HTTP::Persistent::Error,NoMethodError,Zlib::DataError,Mechanize::ResponseCodeError => e
+        print_error("Problem Getting Google Results!\n\t=>#{e}\n") if verbose
       end
     end
-    usablelinks = usablelinks.uniq
-    usablelinks.each do |url|
-      goodlinks << url unless url =~ /lygo\.com|excite\.com|infospace\.com|baidu\.com|duckduckgo\.com|google\.com|ask\.com|msn\.com|microsoft\.com|bing\.com|yahoo\.com|live\.com|microsofttranslator\.com|irongeek\.com|tefneth-import\.com|hackforums\.net|freelancer\.com|facebook\.com|mozilla\.org|stackoverflow\.com|php\.net|wikipedia\.org|amazon\.com|4shared\.com|wordpress\.org|about\.com|phpbuilder\.com|phpnuke\.org|fbi\.gov|nasa\.gov|dhs\.gov|linearcity\.hk|youtube\.com|ptjaviergroup\.com|p4kurd\.com|tizag\.com|lycos\.com|lycosasset\.com|zeeblio\.com|weatherzombie\.com|gamesville\.com|soundcloud\.com|discoverbing\.com|devshed\.com|ashiyane\.org|owasp\.org|1923turk\.com|fictionbook\.org|silenthacker\.do\.am|v4-team\.com|codingforums\.com|tudosobrehacker\.com|zymic\.com|forums\.whirlpool\.net\.au|gaza-hacker\.com|immortaltechnique\.co\.uk|w3schools\.com|phpeasystep\.com|mcafee\.com|specialinterestarms\.com|pastesite\.com|pastebin\.com|joomla\.org|joomla\.fr|sourceforge\.net|joesjewelry\.com|twitter\.com/i
-    end
+    print "\r   [".light_blue + "*".white + "]".light_blue + " Results are in...\n".white
+    goodlinks = usablelinks.uniq
     puts "   [".light_green + "+".white + "] ".light_green + "Unique Links: #{goodlinks.length}".white if verbose
-    f=File.open("#{@@out}hotbot.search", 'w+')
+    f=File.open("#{@@out}google.search", 'w+')
     goodlinks.each { |x| f.puts x }
     f.close
-    if verbose
-      $config['HTTP']['PROGRESS'] = false
-    end
     return goodlinks
   end
 
@@ -198,38 +170,65 @@ class SearchEngine
   # Provides search query and we fetch link results
   # Return the links for first 15 pages as an array
   def yahoo_search(squery, verbose=true)
-    if verbose
-      $config['HTTP']['PROGRESS'] = true
-    end
-    searches=[]
     goodlinks=[]
     usablelinks=[]
-    # Build our array of page requests links
-    puts "[".light_blue + "*".white + "]".light_blue + " Searching via Yahoo!....".white if verbose
-    (0 .. 15).each { |x| searches << "http://search.yahoo.com/search;_ylt=AnMERt0QEqec72pVWttCN6ibvZx4?p=#{squery.gsub(' ', '%20')}&toggle=1&cop=mss&ei=UTF-8&fr=yfp-t-901&xargs=0&b=#{x}1&xa=aoLhm9a82kmZ1OfjB.suzA--,138886228" }
-    # Curl's Multi::Mode for faster requests
-    mresponses = @http.multi_get(searches)
-    searches.each do |url|
-      page = Nokogiri::HTML(mresponses[url].body_str)
-      possibles = page.css("a")
-      possibles.select do |link|
-        if link['href'] =~ /\/r\/_ylt=.+;_ylu=.+\/EXP=\d+\/\*\*(http.+)/
-          u = URI.decode($1.to_s.chomp)
-          usablelinks << u unless u =~ /yahoo\.com|search\/srpcache/
+    puts "[".light_blue + "*".white + "]".light_blue + " Searching via Yahoo....".white if verbose
+    agent = Mechanize.new
+    begin
+      agent.user_agent = $config['HTTP']['HTTP_USER_AGENT']
+      if $config['HTTP']['PROXY']
+        if $config['HTTP']['PROXY_AUTH']
+          agent.set_proxy($config['HTTP']['PROXY_IP'], $config['HTTP']['PROXY_PORT'].to_i, user=$config['HTTP']['PROXY_USER'], pass=$config['HTTP']['PROXY_PASS'])
+        else
+          agent.set_proxy($config['HTTP']['PROXY_IP'], $config['HTTP']['PROXY_PORT'].to_i)
         end
       end
+
+      page = agent.get('https://search.yahoo.com/')
+      search_form = page.form(page.forms.first.name)
+      search_form.p = squery.gsub(' ', '%20')
+      page = agent.submit(search_form, search_form.buttons.first)
+      page.links.each do |link|
+        if not link.text =~ /Cached/i
+          if not link.href.nil? and link.href =~ /^http:\/\/r\.search\.yahoo\.com\//
+            if link.href =~ /\/RU=(.+)\/RK=0/
+              url = $1
+              usablelinks << CGI::unescape(url) unless CGI::unescape(url) =~ @bad_regex
+            end
+          end
+        end
+      end
+    rescue OpenSSL::SSL::SSLError,Errno::ETIMEDOUT,Net::HTTP::Persistent::Error,NoMethodError,Zlib::DataError,Mechanize::ResponseCodeError => e
+      print_error("Problem Getting Yahoo Results!\n\t=>#{e}\n") if verbose
     end
-    usablelinks = usablelinks.uniq
-    usablelinks.each do |url|
-      goodlinks << url unless url =~ /baidu\.com|duckduckgo\.com|google\.com|ask\.com|msn\.com|microsoft\.com|bing\.com|yahoo\.com|live\.com|microsofttranslator\.com|irongeek\.com|tefneth-import\.com|hackforums\.net|freelancer\.com|facebook\.com|mozilla\.org|stackoverflow\.com|php\.net|wikipedia\.org|amazon\.com|4shared\.com|wordpress\.org|about\.com|phpbuilder\.com|phpnuke\.org|fbi\.gov|nasa\.gov|dhs\.gov|linearcity\.hk|youtube\.com|ptjaviergroup\.com|p4kurd\.com|tizag\.com|discoverbing\.com|devshed\.com|lycos\.com|lycosasset\.com|zeeblio\.com|weatherzombie\.com|gamesville\.com|soundcloud\.com|ashiyane\.org|owasp\.org|1923turk\.com|fictionbook\.org|silenthacker\.do\.am|v4-team\.com|codingforums\.com|tudosobrehacker\.com|zymic\.com|forums\.whirlpool\.net\.au|gaza-hacker\.com|immortaltechnique\.co\.uk|w3schools\.com|phpeasystep\.com|mcafee\.com|specialinterestarms\.com|pastesite\.com|pastebin\.com|joomla\.org|joomla\.fr|sourceforge\.net|joesjewelry\.com|twitter\.com/i
+    count=1
+    z=['|','\\','/','*','-']
+    (1..9).each do |x|
+      begin
+        page = agent.page.link_with(:text => "Next").click
+        page.links.each do |link|
+          print "\r   [".light_blue + "#{z[rand(z.size)]}".white + "] Scraping".light_blue + "...".white
+          if not link.text =~ /Cached/i
+            if not link.href.nil? and link.href =~ /^http:\/\/r\.search\.yahoo\.com\//
+              if link.href =~ /\/RU=(.+)\/RK=0/
+                url = $1
+                usablelinks << CGI::unescape(url) unless CGI::unescape(url) =~ @bad_regex
+              end
+            end
+          end
+        end
+        count += 1
+        sleep(1)
+      rescue OpenSSL::SSL::SSLError,Errno::ETIMEDOUT,Net::HTTP::Persistent::Error,NoMethodError,Zlib::DataError,Mechanize::ResponseCodeError => e
+        print_error("Problem Getting Yahoo! Results from page #{count}!\n\t=>#{e}\n") if verbose
+      end
     end
+    print "\r   [".light_blue + "*".white + "]".light_blue + " Results are in...\n".white
+    goodlinks = usablelinks.uniq
     puts "   [".light_green + "+".white + "] ".light_green + "Unique Links: #{goodlinks.length}".white if verbose
     f=File.open("#{@@out}yahoo.search", 'w+')
     goodlinks.each { |x| f.puts x }
     f.close
-    if verbose
-      $config['HTTP']['PROGRESS'] = false
-    end
     return goodlinks
   end
 
