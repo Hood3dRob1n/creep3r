@@ -11,7 +11,7 @@
 
 echo "Running Debian Installer....." | grep --color 'Running Debian Installer'
 echo "Installing OS packages...." | grep --color 'Installing OS packages'
-apt-get -y install curl libcurl3 libcurl4-openssl-dev mysql-client libmysqlclient18 libmysqlclient-dev bundler ruby-dev nmap freetds-common freetds-bin freetds-dev
+apt-get -y install curl libcurl3 libcurl4-openssl-dev mysql-client libmysqlclient18 libmysqlclient-dev bundler ruby-dev nmap freetds-common freetds-bin freetds-dev libpq-dev
 
 echo "Installing MongoDB...." | grep --color 'Installing MongoDB'
 # Add Keys for security

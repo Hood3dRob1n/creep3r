@@ -45,6 +45,3 @@ gem 'pg'
 
 # SNMP Connection Handler and MIB References
 gem 'snmp'
-
-# Wordpress XML-RPC API Compliant Libs
-gem 'rubypress'

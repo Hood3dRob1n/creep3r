@@ -512,32 +512,8 @@ class WordPressAudit
   # Attempt to Login to Exposed XML-RPC Interface
   # Returns true on success, or false if not
   def wp_xmlrpc_login(user='admin', password='admin123', path='/xmlrpc.php', site=@site, verbose=true)
-    uri=URI.parse(site)
-    begin
-      if uri.port == 443
-        # Set HTTP Authentication Details if needed
-        if $config['HTTP']['HTTP_AUTH']
-          xmlrpc_client = Rubypress::Client.new(:host => uri.host, :port => uri.port, :path => path, :use_ssl => true, :username => user, :password => password, :http_user => $config['HTTP']['HTTP_AUTH_USER'], :http_password => $config['HTTP']['HTTP_AUTH_PASS'])
-        else
-          xmlrpc_client = Rubypress::Client.new(:host => uri.host, :port => uri.port, :path => path, :use_ssl => true, :username => user, :password => password)
-        end
-      else
-        if $config['HTTP']['HTTP_AUTH']
-          xmlrpc_client = Rubypress::Client.new(:host => uri.host, :port => uri.port, :path => path, :use_ssl => false, :username => user, :password => password, :http_user => $config['HTTP']['HTTP_AUTH_USER'], :http_password => $config['HTTP']['HTTP_AUTH_PASS'])
-        else
-          xmlrpc_client = Rubypress::Client.new(:host => uri.host, :port => uri.port, :path => path, :use_ssl => false, :username => user, :password => password)
-        end
-      end
-      wp_options = xmlrpc_client.getOptions
-      if not wp_options.nil?
-        print_good("Successfully Authenticated to XML-RPC Interface!") if verbose
-        print_line("#{wp_options.inspect}") if verbose
-        return true
-      end
-    rescue => e
-      print_error("#{e}") if verbose
-    end
-    return false
+    # Need to redo without rubypress dependency....
+    return
   end
 
   # XML-RPC Interface Login Bruter
