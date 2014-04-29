@@ -1,4 +1,4 @@
-# Gemfile for ColdFusion Killer v2
+# Gemfile for Creep3r
 # Grab Sources from the default RubyGems depot
 source 'https://rubygems.org'
 
@@ -32,7 +32,7 @@ gem 'mysql'
 gem 'tiny_tds' 
 
 # We need to get Bcrypt Gem for Hashing Function
-gem 'bcrypt-ruby'
+gem 'bcrypt'
 
 # Handy for various things, used mainly in Shodan search
 gem 'json'
@@ -45,3 +45,6 @@ gem 'pg'
 
 # SNMP Connection Handler and MIB References
 gem 'snmp'
+
+# Ruby LM:NTLM Hash Generator class
+gem 'smbhash'

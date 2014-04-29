@@ -5,14 +5,15 @@
 # Password Tools Help Menu
 def password_usage
   puts "Available Options for Passwords Tools Menu: ".underline.white
-  puts "back ".light_yellow + "    => ".white + "Return to Main Menu".light_red
-  puts "xorme".light_yellow + "    => ".white + "XOR File Encryptor/Decryptor".light_red
-  puts "hasher".light_yellow + "   => ".white + "Password Hashing Tool".light_red
-  puts "identify".light_yellow + " => ".white + "Password Hash Identifier".light_red
-  puts "mangler".light_yellow + "  => ".white + "Wordlist Mangler Tool".light_red
-  puts "profiler".light_yellow + " => ".white + "Profile Wordlist Generator".light_red
-  puts "cracker".light_yellow + "  => ".white + "Simple Hash Cracker Tool".light_red
-  puts "zipy".light_yellow + "     => ".white + "Simple Password Protected Zip Cracker".light_red
+  puts "back ".light_yellow + "      => ".white + "Return to Main Menu".light_red
+  puts "xorme".light_yellow + "      => ".white + "XOR File Encryptor/Decryptor".light_red
+  puts "hasher".light_yellow + "     => ".white + "Password Hashing Tool".light_red
+  puts "identify".light_yellow + "   => ".white + "Password Hash Identifier".light_red
+  puts "mangler".light_yellow + "    => ".white + "Wordlist Mangler Tool".light_red
+  puts "profiler".light_yellow + "   => ".white + "Profile Wordlist Generator".light_red
+  puts "findmyhash".light_yellow + " => ".white + "Online Hash Checker/Cracker".light_red
+  puts "cracker".light_yellow + "    => ".white + "Simple Wordlist Based Hash Cracker Tool".light_red
+  puts "zipy".light_yellow + "       => ".white + "Simple Password Protected Zip Cracker".light_red
   print_line("")
 end
 
@@ -264,6 +265,34 @@ def password_menu
         end
       end
       simple_crack(hash_type, crackme_please, wordlists)
+      password_menu
+    when /^findmyhash|^fmh$|^find.+hash/i
+      print_status("Online Hash Finder Assistant")
+      supported = [ 'MD4', 'MD5', 'LM', 'NTLM', 'LM:NTLM', 'MYSQL', 'SHA1' ]
+      while(true)
+        print_caution("Supported Hash Types:\n   #{supported.join(',')}\n")
+        answer = Readline.readline("   Hash Type to Use: ", true)
+        if supported.include?(answer.strip.chomp.upcase)
+          htype = answer.strip.chomp.upcase
+          break
+        else
+          puts
+          print_error("Unknown Hash Type Provided!")
+          print_error("Let's try this one more time, shall we....\n")
+        end
+      end
+      answer = Readline.readline("   Enter Hash: ", true)
+      hashstr = answer.strip.chomp
+      answer = Readline.readline("   Stop on first success (Y/N)?: ", true)
+      puts
+      if answer.upcase[0] == 'Y'
+        sos=true
+      else
+        sos=false
+      end
+      print_status("Running hash search, hang tight...")
+      fmh = HashFinder.new(hashstr, sos, htype)
+      fmh.total_hash_search()
       password_menu
     when /^zipy$|^zip$|^zip.crack/i
       zip_file = Readline.readline("   Path to Protected Zip: ", true)

@@ -107,17 +107,17 @@ end
 
 # Generate Windows LM Hash
 def lm(string)
-  Samba::Encrypt.lm_hash(string)
+  Smbhash.lm_hash(string)
 end
 
 # Generate Windows NTLM Hash
 def ntlm(string)
-  Samba::Encrypt.ntlm_hash(string)
+  Smbhash.ntlm_hash(string)
 end
 
 # Generate Full Windows LM:NTLM Hash
 def ntlm_gen(string)
-  Samba::Encrypt.ntlmgen(string).join(":")
+  Smbhash.ntlmgen(string).join(":")
 end
 
 # Generate a SHA1 Hash
@@ -220,17 +220,17 @@ class String
 
   # Generate Windows LM Hash
   def lm
-    Samba::Encrypt.lm_hash(self)
+    Smbhash.lm_hash(self)
   end
 
   # Generate Windows NTLM Hash
   def ntlm
-    Samba::Encrypt.ntlm_hash(self)
+    Smbhash.ntlm_hash(self)
   end
 
   # Generate Full Windows LM:NTLM Hash
   def ntlm_gen
-    Samba::Encrypt.ntlmgen(self).join(":")
+    Smbhash.ntlmgen(self).join(":")
   end
 
   # Base64 Encode String
