@@ -41,7 +41,6 @@ require 'nokogiri'   #
 require 'mechanize'  #
 require 'mysql'      #
 require 'pg'         #
-require 'rubypress'  #
 require 'snmp'       #
 require 'text-table' #
 require 'tiny_tds'   ########
