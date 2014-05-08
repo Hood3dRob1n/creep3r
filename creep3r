@@ -41,6 +41,7 @@ require 'nokogiri'   #
 require 'mechanize'  #
 require 'mysql'      #
 require 'pg'         #
+require 'smbhash'    #
 require 'snmp'       #
 require 'text-table' #
 require 'tiny_tds'   ########
@@ -55,14 +56,6 @@ RESULTS = File.expand_path(File.dirname(__FILE__)) << '/results/'
 Dir.glob("#{HOME}classes/*.rb").each do |code|
   require "#{code}"
 end
-
-# 3rd party generates LM:NTLM hashes in ruby
-# https://github.com/krissi/ruby-smbhash.git
-# Bundler doesnt like their site setup so it
-# should have been included with source package...
-#########################################################
-require "#{HOME}classes/ruby-smbhash/lib/samba/encrypt" #
-#########################################################
 
 # Trap Interupts, close clean
 trap("SIGINT") {
