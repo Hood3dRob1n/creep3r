@@ -8,6 +8,7 @@ def recon_menu_help
   puts "crawler".light_yellow + "    => ".white + "Site Crawler".light_red
   puts "shodan".light_yellow + "     => ".white + "Shodan Search".light_red
   puts "dnsenum".light_yellow + "    => ".white + "DNS Enumeration".light_red
+  puts "subdomains".light_yellow + " => ".white + "DNS Sub-Domain Bruteforcer".light_red
   puts "nmap".light_yellow + "       => ".white + "Simple NMAP Scan".light_red
   puts "service".light_yellow + "    => ".white + "NMAP Service Scan".light_red
   puts "shellstorm".light_yellow + " => ".white + "Shell-Storm Shellcode Search".light_red
