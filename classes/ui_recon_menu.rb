@@ -80,11 +80,33 @@ def recon_menu
       crawler.crawl_site
       puts
       recon_menu
-    when /^dns/i
+    when /^dnsenum|^dns.enum/i
       print_status("Need some basic info....")
       target = Readline.readline("   Enter Domain or IP to Enumerate: ", true)
       dnsenum = DNSEnum.new(target.strip.chomp)
+      print_status("Running DNS Enumeration and Reverse Lookup....")
       dnsenum.host_recon
+      recon_menu
+    when /^dnssub|^subdomains|^sub.brute|^subbrute/i
+      print_status("Need some basic info....")
+      target = Readline.readline("   Enter Domain to Bruteforce Sub-Domains for: ", true)
+      dns = DNSEnum.new(target.strip.chomp)
+      answer = Readline.readline("   Use default list (Y/N)? ", true)
+      if answer[0].upcase == 'N'
+        l = Readline.readline("   Enter Path to Sub-Domain Fuzz File: ", true)
+        puts
+        if File.exists?(l.strip.chomp)
+          list = l.strip.chomp
+          dns.subdomain_bruter(list)
+        else
+          print_error("Problem loading sub-domain fuzz file!")
+          print_caution("Using default list instead....")
+          dns.subdomain_bruter
+        end
+      else
+        puts
+        dns.subdomain_bruter
+      end
       recon_menu
     when /^nmap/i
       print_status("Need some basic info for scan....")

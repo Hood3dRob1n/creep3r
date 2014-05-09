@@ -13,7 +13,6 @@ class DNSEnum
     Dir.mkdir(RESULTS + 'recon/' + host) unless File.exists?(RESULTS + 'recon/' + host) and File.directory?(RESULTS + 'recon/' + host)
     @@out = RESULTS + 'recon/' + host + "/host_recon.txt"
     @@file = File.open(@@out, 'w+')
-    print_status("Running DNS Enumeration and Reverse Lookup....")
 
     # All valid Top Level Domains (TLD's) according to ICANN
     # http://www.icann.org/en/resources/registries/tlds
@@ -27,10 +26,6 @@ class DNSEnum
   # Enumerate Hosts via Bing Search using ip:#{ip} filter
   # Results are printed in terminal and logged to RESULTS dir
   def host_recon(host=@@host)
-    trap("SIGINT") {
-      print_error("CTRL+C! Returning to Previous Menu....")
-      return
-    }
     @@file.puts "##########################################"
     @@file.puts "IP: #{@@ip}"
     @@file.puts "Domain: #{@@domain}" unless @@domain == @@ip
@@ -374,5 +369,93 @@ class DNSEnum
         # Do Nothing, just keep moving....
       end
     end
+  end
+
+  # Threaded Sub-Domain Bruteforcer
+  # Pic: http://i.imgur.com/oNXhVah.png
+  # Pass in wordlist and it will attempt to resolve each possibility
+  # Returns an array subdomains found or nil
+  def subdomain_bruter(list="#{HOME}fuzz/subs_all.txt", domain=@@domain)
+    if File.exists?(list)
+      count = File.foreach(list).inject(0) {|c, line| c+1}
+      Dir.mkdir(RESULTS + 'recon/' + @@host) unless File.exists?(RESULTS + 'recon/' + @@host) and File.directory?(RESULTS + 'recon/' + @@host)
+      out = RESULTS + 'recon/' + @@host + "/sub_domains.txt"
+      possibles = File.open(list).readlines
+
+      puts "##########################################".light_blue
+      puts "#".light_blue + "     Creep3r Sub-Domain Bruteforcer     ".white + "#".light_blue
+      puts "##########################################".light_blue
+      print_status("Domain: #{domain}")
+      print_status("Fuzzies: #{count}")
+      print_status("Fuzz File: #{list.sub(HOME, './')}")
+      puts "##########################################".light_blue
+
+      @subs={}                                           # Results stored in Hash array
+      counter=0                                          # Tracker
+      max_threads = 16                                   # Max Threads
+      cur_threads = []                                   # Thread Pool Storage
+      queue = possibles.uniq.shuffle                     # Total fuzzies is our total queue
+      while(queue.length > 0)                            # Loop while fuzzies left to test
+        while(cur_threads.length < max_threads)          # Dont exceed thread pool
+          counter += 1                                   # Increment our tracker
+          item = queue.shift                             # Pop one off stack each iteration
+          break if not item                              # Bounce if we are out of subs to try
+          next if item.strip.chomp == '' or item =~ /^#/ # Skip Blanks/Comments
+          print "\r(".light_red + "#{counter}".white + "/".light_yellow + "#{count}".white + ")> ".light_red + "#{(100 * (counter.to_f / count.to_f)).to_i}%".white                               # Status display
+          t = Thread.new(item) do |count|                # Break off worker thread
+            s = item.strip.chomp + ".#{domain.downcase}" # Build our sub.domain
+            begin
+              i = Resolv.getaddress(s)                   # Try to resolve sub.domain to IP as our simple check      
+              @subs.store(s, i)                          # Store Findings in hash, @subs[sub.domain] = 'IP'
+            rescue Resolv::ResolvError => e              
+              next                                       # Skip Errors, continue forward
+            end
+          end
+          cur_threads << t                               # Collect our threads
+        end
+
+        # Add to a list of dead threads if we're finished, then delete them
+        cur_threads.each_index do |ti|
+          t = cur_threads[ti]
+          if not t.alive?
+            cur_threads[ti] = nil
+          end
+        end
+        cur_threads.delete(nil)
+        sleep(0.25)
+      end
+
+      # Clean up any remaining threads
+      cur_threads.each {|x| x.kill }
+
+      # Report findings if any
+      if not @subs.nil? and @subs.size > 0
+        puts
+        print_status("Found #{@subs.size} sub-domains: ")
+        puts '   ' + @subs.keys.join("\n   ").to_s.white
+        file = File.open(out, 'w+')
+        file.puts "##########################################"
+        file.puts "#     Creep3r Sub-Domain Bruteforcer     #"
+        file.puts "##########################################"
+        file.puts "# Domain: #{domain}"
+        file.puts "# Fuzzies: #{count}"
+        file.puts "# Fuzz File: #{list.sub(HOME, './')}"
+        file.puts "# Sub-Domains Found: #{@subs.size}"
+        file.puts "##########################################"
+        @subs.each do |k, v|
+          file.puts "#{k}"
+          file.puts "   => #{v}"
+        end
+        file.close
+      else
+        print_error("No Sub-Domains Identified")
+      end
+      return @subs # Return findings
+    else
+      puts
+      print_error("Unable to load sub-domain wordlist!")
+      print_error("Check path or permissions and try again...\n")
+    end
+    return nil
   end
 end
